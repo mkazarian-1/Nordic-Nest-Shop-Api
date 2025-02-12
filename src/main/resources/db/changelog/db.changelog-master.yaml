@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/test-changelog.yaml
+      file: db/changelog/changes/categories-create-changelog.yaml
+  - include:
+      file: db/changelog/changes/products-create-changelog.yaml
