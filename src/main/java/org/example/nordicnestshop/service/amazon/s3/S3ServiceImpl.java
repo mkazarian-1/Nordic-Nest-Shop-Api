@@ -1,25 +1,29 @@
 package org.example.nordicnestshop.service.amazon.s3;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import net.coobird.thumbnailator.Thumbnails;
 import org.example.nordicnestshop.exception.IncorrectArgumentException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 @Log4j2
@@ -33,17 +37,21 @@ public class S3ServiceImpl implements S3Service {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    private final ExecutorService executor = Executors.newFixedThreadPool(5);
+
     @Override
     public String uploadFile(MultipartFile file) {
         log.info("Starting file upload: {}", file.getOriginalFilename());
 
         List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "webp");
         String originalFilename = Objects.requireNonNull(file.getOriginalFilename());
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        String fileExtension = originalFilename.substring(
+                originalFilename.lastIndexOf(".") + 1).toLowerCase();
 
         if (!allowedExtensions.contains(fileExtension)) {
             log.warn("File type not allowed: {}", fileExtension);
-            throw new IncorrectArgumentException("Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.");
+            throw new IncorrectArgumentException("Invalid file type."
+                    + " Only JPG, JPEG, PNG, and WEBP are allowed.");
         }
 
         String uniqueFileName = UUID.randomUUID() + ".webp";
@@ -99,6 +107,27 @@ public class S3ServiceImpl implements S3Service {
             log.error("Failed to delete file: {}", e.awsErrorDetails().errorMessage(), e);
             throw new RuntimeException("Failed to delete file", e);
         }
+    }
+
+    @Override
+    public List<String> uploadFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            throw new IncorrectArgumentException("No files provided for upload.");
+        }
+
+        List<CompletableFuture<String>> futures = files.stream()
+                .map(file -> CompletableFuture.supplyAsync(() -> uploadFile(file), executor))
+                .toList();
+
+        return futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteFiles(List<String> files) {
+        if (files == null || files.isEmpty()) {
+            throw new IncorrectArgumentException("No urls provided for delete.");
+        }
+        files.forEach(file -> CompletableFuture.runAsync(() -> deleteFile(file), executor));
     }
 
     private String generateUrl(String bucketName, String key) {

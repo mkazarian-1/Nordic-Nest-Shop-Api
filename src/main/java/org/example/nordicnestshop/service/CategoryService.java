@@ -7,9 +7,8 @@ import org.example.nordicnestshop.model.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
 public interface CategoryService {
-    CategoryDto save(CreateCategoryDto categoryDto);
+    CategoryDto create(CreateCategoryDto categoryDto);
 
     CategoryDto update(UpdateCategoryDto updateCategoryDto, Long id);
 

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 1738707978446-1
+      id: 1739967281622-1
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -31,7 +31,7 @@ databaseChangeLog:
                   type: BIGINT
             tableName: attributes
   - changeSet:
-      id: 1738707978446-2
+      id: 1739967281622-2
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -53,7 +53,7 @@ databaseChangeLog:
                   type: BIGINT
             tableName: product_category
   - changeSet:
-      id: 1738707978446-3
+      id: 1739967281622-3
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -77,9 +77,12 @@ databaseChangeLog:
                     nullable: false
                   name: product_id
                   type: BIGINT
+              - column:
+                  name: order_index
+                  type: INT
             tableName: product_images
   - changeSet:
-      id: 1738707978446-4
+      id: 1739967281622-4
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -115,16 +118,7 @@ databaseChangeLog:
                   type: DECIMAL(10, 2)
             tableName: products
   - changeSet:
-      id: 1738707978446-5
-      author: mkUser
-      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
-      changes:
-        - addUniqueConstraint:
-            columnNames: article
-            constraintName: uc_products_article
-            tableName: products
-  - changeSet:
-      id: 1738707978446-6
+      id: 1739967281622-5
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -135,7 +129,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: products
   - changeSet:
-      id: 1738707978446-7
+      id: 1739967281622-6
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -146,7 +140,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: products
   - changeSet:
-      id: 1738707978446-8
+      id: 1739967281622-7
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -157,7 +151,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: categories
   - changeSet:
-      id: 1738707978446-9
+      id: 1739967281622-8
       author: mkUser
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:

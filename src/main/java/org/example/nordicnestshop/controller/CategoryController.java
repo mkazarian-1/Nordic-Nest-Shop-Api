@@ -13,8 +13,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Category repository manager",
         description = "Endpoints for basic category repository management")
@@ -24,32 +31,32 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryController {
     private final CategoryService categoryService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping()
+    //    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create category",
             description = """
-                        Return the newly created category if the creation went well.
-                        \nNecessary role: ADMIN
-                        """)
+                    Return the newly created category if the creation went well.
+                    \nNecessary role: ADMIN
+                    """)
     public CategoryDto createCategory(@Valid CreateCategoryDto requestDto) {
-        return categoryService.save(requestDto);
+        return categoryService.create(requestDto);
     }
 
     @PutMapping("/{id}")
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    //    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Update category",
             description = """
                     Return the update book if the update went well
                     \nNecessary role: ADMIN
                     """)
-    public CategoryDto updateCategory(@RequestBody @Valid UpdateCategoryDto requestDto,
+    public CategoryDto updateCategory(@Valid UpdateCategoryDto requestDto,
                                       @PathVariable Long id) {
         return categoryService.update(requestDto, id);
     }
 
     @DeleteMapping("/{id}")
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    //    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete category",
             description = """
@@ -61,7 +68,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-//    @PreAuthorize("hasAuthority('USER')")
+    //    @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Get category by id",
             description = """
                     Returns the category by the specified parameter
@@ -72,7 +79,7 @@ public class CategoryController {
     }
 
     @GetMapping()
-//    @PreAuthorize("hasAuthority('USER')")
+    //    @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Get all categories (with pagination and sorting)",
             description = """
                     Returns list
@@ -86,14 +93,15 @@ public class CategoryController {
     }
 
     @GetMapping("/title")
-//    @PreAuthorize("hasAuthority('USER')")
+    //@PreAuthorize("hasAuthority('USER')")
     public CategoryDto getByTitle(@RequestParam String title) {
         return categoryService.getByTitle(title);
     }
 
     @GetMapping("/type")
-//    @PreAuthorize("hasAuthority('USER')")
-    public Page<CategoryDto> getAllByStatus(@RequestParam Category.CategoryType type, Pageable pageable) {
+    //@PreAuthorize("hasAuthority('USER')")
+    public Page<CategoryDto> getAllByStatus(@RequestParam Category.CategoryType type,
+                                            Pageable pageable) {
         return categoryService.getAllByType(pageable, type);
     }
 }

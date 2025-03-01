@@ -25,7 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto save(CreateCategoryDto categoryDto) {
+    public CategoryDto create(CreateCategoryDto categoryDto) {
         Category newCategory = categoryMapper.toEntity(categoryDto);
         newCategory.setImageUrl(s3Service.uploadFile(categoryDto.getImage()));
         return categoryMapper.toDto(categoryRepository.save(newCategory));
@@ -71,7 +71,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto getByTitle(String title) {
         return categoryMapper.toDto(categoryRepository.findByTitle(title).orElseThrow(
-                () -> new ElementNotFoundException("Can't find Category object by Title: " + title)));
+                () -> new ElementNotFoundException("Can't find Category object by Title: "
+                        + title)));
     }
 
     @Override

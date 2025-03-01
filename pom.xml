@@ -124,6 +124,7 @@
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <sourceDirectories>src</sourceDirectories>
                 </configuration>
                 <executions>
                     <execution>
