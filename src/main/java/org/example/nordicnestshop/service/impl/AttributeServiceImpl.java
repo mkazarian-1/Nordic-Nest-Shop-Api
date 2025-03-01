@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.example.nordicnestshop.model.product.Attribute;
 import org.example.nordicnestshop.model.product.Product;
-import org.example.nordicnestshop.repository.AttributeRepository;
 import org.example.nordicnestshop.service.AttributeService;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
