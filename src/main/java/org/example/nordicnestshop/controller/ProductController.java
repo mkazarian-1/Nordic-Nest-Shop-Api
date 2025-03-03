@@ -11,6 +11,7 @@ import org.example.nordicnestshop.dto.product.UpdateProductDto;
 import org.example.nordicnestshop.service.ProductService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,36 +29,32 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping()
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductFullDto createCategory(@Valid CreateProductDto requestDto) {
         return productService.create(requestDto);
     }
 
     @PutMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ProductFullDto updateCategory(@Valid UpdateProductDto requestDto,
                                          @PathVariable Long id) {
         return productService.update(id, requestDto);
     }
 
     @DeleteMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable Long id) {
         productService.delete(id);
     }
 
-    //
     @GetMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('USER')")
     public ProductFullDto getCategoryById(@PathVariable Long id) {
         return productService.getById(id);
     }
-    //
 
     @GetMapping("/search")
-    //    @PreAuthorize("hasAuthority('USER')")
     public ProductSearchResponseDto getAllByCategoryIdsAndAttributes(@RequestParam(required = false)
                                                                      List<Long> categoryIds,
                                                                      @RequestParam(required = false)
