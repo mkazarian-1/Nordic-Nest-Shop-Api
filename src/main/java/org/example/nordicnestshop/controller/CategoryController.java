@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +33,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping()
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create category",
             description = """
@@ -44,7 +45,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Update category",
             description = """
                     Return the update book if the update went well
@@ -56,7 +57,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete category",
             description = """
@@ -68,7 +69,6 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    //    @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "Get category by id",
             description = """
                     Returns the category by the specified parameter
@@ -93,13 +93,11 @@ public class CategoryController {
     }
 
     @GetMapping("/title")
-    //@PreAuthorize("hasAuthority('USER')")
     public CategoryDto getByTitle(@RequestParam String title) {
         return categoryService.getByTitle(title);
     }
 
     @GetMapping("/type")
-    //@PreAuthorize("hasAuthority('USER')")
     public Page<CategoryDto> getAllByStatus(@RequestParam Category.CategoryType type,
                                             Pageable pageable) {
         return categoryService.getAllByType(pageable, type);

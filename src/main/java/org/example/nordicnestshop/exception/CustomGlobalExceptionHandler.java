@@ -7,6 +7,8 @@ import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -81,15 +83,25 @@ public class CustomGlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    //    @ExceptionHandler(AuthenticationServiceException.class)
-    //    public ResponseEntity<Map<String, String>> handleAuthenticationServiceException(
-    //            AuthenticationServiceException e) {
-    //        Map<String, String> errors = new HashMap<>();
-    //
-    //        errors.put("error", e.getMessage());
-    //
-    //        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
-    //    }
+    @ExceptionHandler(AuthenticationServiceException.class)
+    public ResponseEntity<Map<String, String>> handleAuthenticationServiceException(
+            AuthenticationServiceException e) {
+        Map<String, String> errors = new HashMap<>();
+
+        errors.put("error", e.getMessage());
+
+        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAuthorizationDeniedException(
+            AuthorizationDeniedException e) {
+        Map<String, String> errors = new HashMap<>();
+
+        errors.put("error", e.getMessage());
+
+        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(

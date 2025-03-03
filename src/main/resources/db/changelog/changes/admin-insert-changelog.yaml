@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-admin-user-1
+      author: mkUser
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: "admin@gmail.com"
+              - column:
+                  name: first_name
+                  value: "admin"
+              - column:
+                  name: second_name
+                  value: "admin"
+              - column:
+                  name: password
+                  value: "$2a$10$PMKQzPuRZBT3/csrtnjJGOdc69s0tUaJeAm7rZrwWTan9eyMINvAu"
+  - changeSet:
+      id: insert-admin-user-2
+      author: mkUser
+      changes:
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: roles
+                  value: USER
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: roles
+                  value: ADMIN

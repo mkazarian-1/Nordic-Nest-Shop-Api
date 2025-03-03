@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changes/categories-create-changelog.yaml
   - include:
       file: db/changelog/changes/products-create-changelog.yaml
+  - include:
+      file: db/changelog/changes/user-create-changelog.yaml
+  - include:
+      file: db/changelog/changes/admin-insert-changelog.yaml
