@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -104,6 +105,26 @@ public class SpecificationProviderImpl implements SpecificationProvider {
             }
 
             return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    @Override
+    public Specification<Product> minPrice(BigDecimal min) {
+        return (root, query, criteriaBuilder) -> {
+            if (min == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("price"), min);
+        };
+    }
+
+    @Override
+    public Specification<Product> maxPrice(BigDecimal max) {
+        return (root, query, criteriaBuilder) -> {
+            if (max == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.lessThanOrEqualTo(root.get("price"), max);
         };
     }
 

@@ -1,5 +1,6 @@
 package org.example.nordicnestshop.repository.specification;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import org.example.nordicnestshop.model.product.Product;
@@ -11,4 +12,8 @@ public interface SpecificationProvider {
     Specification<Product> hasAttributes(Map<String, List<String>> attributes);
 
     Specification<Product> semanticSearch(String searchText);
+
+    Specification<Product> minPrice(BigDecimal min);
+
+    Specification<Product> maxPrice(BigDecimal max);
 }

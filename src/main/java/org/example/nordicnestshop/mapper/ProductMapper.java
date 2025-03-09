@@ -46,6 +46,8 @@ public interface ProductMapper {
             expression = "java(this.updateAttributesWithProduct"
                     + "(productDto.getAttributes(), product, attributeMapper))"
     )
+    @Mapping(target = "categories", source = "categoryIds",
+            qualifiedByName = "setCategoriesFromIds")
     void updateEntity(UpdateProductDto productDto, @MappingTarget Product product);
 
     @Named("setCategoriesFromIds")

@@ -1,7 +1,6 @@
 package org.example.nordicnestshop.controller;
 
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.example.nordicnestshop.dto.product.CreateProductDto;
@@ -56,21 +55,8 @@ public class ProductController {
 
     @GetMapping("/search")
     public ProductSearchResponseDto getAllByCategoryIdsAndAttributes(@RequestParam(required = false)
-                                                                     List<Long> categoryIds,
-                                                                     @RequestParam(required = false)
                                                                      Map<String, String> attributes,
-                                                                     @RequestParam(required = false)
-                                                                     String searchText,
                                                                      Pageable pageable) {
-        if (categoryIds != null) {
-            attributes.remove("categoryIds");
-        }
-        if (searchText != null) {
-            attributes.remove("searchText");
-        }
-        return productService.getAllByCategoryIdsAndAttributes(categoryIds,
-                attributes,
-                searchText,
-                pageable);
+        return productService.getAllByCategoryIdsAndAttributes(attributes, pageable);
     }
 }

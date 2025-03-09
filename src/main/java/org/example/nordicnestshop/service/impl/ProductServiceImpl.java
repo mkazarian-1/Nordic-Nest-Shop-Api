@@ -1,7 +1,9 @@
 package org.example.nordicnestshop.service.impl;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import org.example.nordicnestshop.dto.product.ProductFullDto;
 import org.example.nordicnestshop.dto.product.ProductSearchResponseDto;
 import org.example.nordicnestshop.dto.product.UpdateProductDto;
 import org.example.nordicnestshop.exception.ElementNotFoundException;
+import org.example.nordicnestshop.exception.IncorrectArgumentException;
 import org.example.nordicnestshop.mapper.ProductMapper;
 import org.example.nordicnestshop.model.product.Attribute;
 import org.example.nordicnestshop.model.product.Product;
@@ -47,10 +50,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductFullDto create(CreateProductDto createProductDto) {
         ifCategoryExist(createProductDto.getCategoryIds());
-        createProductDto.getAttributes().forEach(a -> {
-            a.setKey(a.getKey().toLowerCase());
-            a.setValue(a.getValue().toLowerCase());
-        });
+
+        if (createProductDto.getAttributes() != null) {
+            createProductDto.getAttributes().forEach(a -> {
+                a.setKey(a.getKey().toLowerCase());
+                a.setValue(a.getValue().toLowerCase());
+            });
+        }
 
         Product product = productMapper.toEntity(createProductDto);
         product.setImages(uploadImages(createProductDto.getImages(), product));
@@ -63,10 +69,12 @@ public class ProductServiceImpl implements ProductService {
     public ProductFullDto update(Long id, UpdateProductDto updateProductDto) {
         ifCategoryExist(updateProductDto.getCategoryIds());
 
-        updateProductDto.getAttributes().forEach(a -> {
-            a.setKey(a.getKey().toLowerCase());
-            a.setValue(a.getValue().toLowerCase());
-        });
+        if (updateProductDto.getAttributes() != null) {
+            updateProductDto.getAttributes().forEach(a -> {
+                a.setKey(a.getKey().toLowerCase());
+                a.setValue(a.getValue().toLowerCase());
+            });
+        }
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() ->
@@ -91,12 +99,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductSearchResponseDto getAllByCategoryIdsAndAttributes(List<Long> categoryIds,
-                                                                     Map<String, String> attributes,
-                                                                     String searchText,
+    public ProductSearchResponseDto getAllByCategoryIdsAndAttributes(Map<String, String> attributes,
                                                                      Pageable pageable) {
-        Specification<Product> specification =
-                getSpecification(categoryIds, attributes, searchText);
+        Specification<Product> specification = getSpecification(attributes);
 
         Page<Product> products = productRepository.findAll(specification, pageable);
         Map<Long, List<ProductImage>> productImages = productImageRepository
@@ -110,12 +115,12 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.groupingBy(a -> a.getProduct().getId()));
 
         products.forEach(p -> {
-            p.setAttributes(new HashSet<>(productAttributes.get(p.getId())));
+            p.setAttributes(new HashSet<>(productAttributes
+                    .getOrDefault(p.getId(), Collections.emptyList())));
             p.setImages(productImages.get(p.getId()));
         });
 
-        return new ProductSearchResponseDto(products.map(productMapper::toDto),
-                attributeService.getAvailableAttributes(products));
+        return formResult(products);
     }
 
     @Transactional
@@ -130,9 +135,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void ifCategoryExist(List<Long> categoryIds) {
+        if (categoryIds == null) {
+            return;
+        }
+
         long existingCount = categoryRepository.countByIdIn(categoryIds);
         if (existingCount != categoryIds.size()) {
-            throw new EntityNotFoundException("Some categories do not exist.");
+            throw new ElementNotFoundException("Some categories do not exist.");
         }
     }
 
@@ -154,6 +163,16 @@ public class ProductServiceImpl implements ProductService {
         s3Service.deleteFiles(urls);
     }
 
+    private ProductSearchResponseDto formResult(Page<Product> products) {
+        return new ProductSearchResponseDto(
+                products.map(productMapper::toDto),
+                attributeService.getAvailableAttributes(products),
+                products.stream().map(Product::getPrice)
+                        .max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO),
+                products.stream().map(Product::getPrice)
+                        .min(Comparator.naturalOrder()).orElse(BigDecimal.ZERO));
+    }
+
     private Map<String, List<String>> convertAttributesRequest(Map<String, String> attributes) {
         return attributes.entrySet().stream()
                 .collect(Collectors.toMap(
@@ -162,21 +181,45 @@ public class ProductServiceImpl implements ProductService {
                 ));
     }
 
-    private Specification<Product> getSpecification(List<Long> categoryIds,
-                                                    Map<String, String> attributes,
-                                                    String searchText) {
-        Map<String, List<String>> convertedAttributes = convertAttributesRequest(attributes);
-        Specification<Product> specification = Specification.where(null);
+    private Specification<Product> getSpecification(Map<String, String> attributes) {
+        attributes.remove("page_size");
+        attributes.remove("page_number");
 
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            specification = specification.and(specificationProvider.hasCategoryIds(categoryIds));
+        Specification<Product> specification = Specification.where(null);
+        try {
+            if (attributes.get("categoryIds") != null) {
+                List<Long> categoryIds = Arrays.stream(attributes.remove("categoryIds")
+                                .split(","))
+                        .map(Long::parseLong)
+                        .toList();
+                specification = specification.and(specificationProvider
+                        .hasCategoryIds(categoryIds));
+            }
+
+            if (attributes.get("searchText") != null) {
+                String searchText = attributes.remove("searchText");
+                specification = specification
+                        .and(specificationProvider.semanticSearch(searchText));
+            }
+
+            if (attributes.get("minPrice") != null) {
+                BigDecimal minPrice = BigDecimal
+                        .valueOf(Long.parseLong(attributes.remove("minPrice")));
+                specification = specification.and(specificationProvider.minPrice(minPrice));
+            }
+            if (attributes.get("maxPrice") != null) {
+                BigDecimal minPrice = BigDecimal
+                        .valueOf(Long.parseLong(attributes.remove("maxPrice")));
+                specification = specification.and(specificationProvider.maxPrice(minPrice));
+            }
+        } catch (NumberFormatException e) {
+            throw new IncorrectArgumentException("Incorrect input format. " + e.getMessage(), e);
         }
+
+        Map<String, List<String>> convertedAttributes = convertAttributesRequest(attributes);
         if (convertedAttributes != null && !convertedAttributes.isEmpty()) {
             specification = specification.and(specificationProvider
                     .hasAttributes(convertedAttributes));
-        }
-        if (searchText != null) {
-            specification = specification.and(specificationProvider.semanticSearch(searchText));
         }
         return specification;
     }
