@@ -1,6 +1,5 @@
 package org.example.nordicnestshop.service;
 
-import java.util.List;
 import java.util.Map;
 import org.example.nordicnestshop.dto.product.CreateProductDto;
 import org.example.nordicnestshop.dto.product.ProductFullDto;
@@ -15,9 +14,7 @@ public interface ProductService {
 
     ProductFullDto getById(Long id);
 
-    ProductSearchResponseDto getAllByCategoryIdsAndAttributes(List<Long> categoryIds,
-                                                              Map<String, String> attributes,
-                                                              String searchText,
+    ProductSearchResponseDto getAllByCategoryIdsAndAttributes(Map<String, String> attributes,
                                                               Pageable pageable);
 
     void delete(Long id);

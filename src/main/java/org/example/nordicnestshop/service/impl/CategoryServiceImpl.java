@@ -5,7 +5,6 @@ import org.example.nordicnestshop.dto.category.CategoryDto;
 import org.example.nordicnestshop.dto.category.CreateCategoryDto;
 import org.example.nordicnestshop.dto.category.UpdateCategoryDto;
 import org.example.nordicnestshop.exception.ElementNotFoundException;
-import org.example.nordicnestshop.exception.IncorrectArgumentException;
 import org.example.nordicnestshop.mapper.CategoryMapper;
 import org.example.nordicnestshop.model.Category;
 import org.example.nordicnestshop.repository.CategoryRepository;
@@ -35,11 +34,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto update(UpdateCategoryDto updateCategoryDto, Long id) {
         Category category = categoryRepository.findById(id).orElseThrow(
-                () -> new IncorrectArgumentException("Can't find Category object by ID:" + id));
+                () -> new ElementNotFoundException("Can't find Category object by ID:" + id));
 
         categoryMapper.updateEntity(updateCategoryDto, category);
 
-        if (!updateCategoryDto.getImage().isEmpty()) {
+        if (updateCategoryDto.getImage() != null && !updateCategoryDto.getImage().isEmpty()) {
             String newUrl = s3Service.uploadFile(updateCategoryDto.getImage());
             s3Service.deleteFile(category.getImageUrl());
             category.setImageUrl(newUrl);
@@ -55,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
                 () -> new ElementNotFoundException("Can't find Category object by ID:" + id));
 
         s3Service.deleteFile(category.getImageUrl());
-        categoryRepository.delete(category);
+        categoryRepository.deleteCategoryAndAssociations(category.getId());
     }
 
     @Override
