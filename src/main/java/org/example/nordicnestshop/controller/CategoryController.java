@@ -1,6 +1,11 @@
 package org.example.nordicnestshop.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,82 +29,159 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Category repository manager",
-        description = "Endpoints for basic category repository management")
+@Tag(name = "Category Management",
+        description = """
+                Endpoints for managing categories,
+                including creation, updates, deletion, and retrieval.
+                """)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/categories")
 public class CategoryController {
     private final CategoryService categoryService;
 
-    @PostMapping()
+    @Operation(
+            summary = "Create a new category",
+            description = """
+                    Creates a new category and returns the created category details.
+                    \nNecessary role: **ADMIN**
+                    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Category successfully created",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CategoryDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create category",
-            description = """
-                    Return the newly created category if the creation went well.
-                    \nNecessary role: ADMIN
-                    """)
-    public CategoryDto createCategory(@Valid CreateCategoryDto requestDto) {
+    public CategoryDto createCategory(
+            @Parameter(description = "Category creation request data", required = true)
+            @Valid CreateCategoryDto requestDto) {
         return categoryService.create(requestDto);
     }
 
+    @Operation(
+            summary = "Update an existing category",
+            description = """
+                    Updates the category with the given ID
+                    and returns the updated category details.
+                    \nNecessary role: **ADMIN**
+                    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category successfully updated",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CategoryDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    @Operation(summary = "Update category",
-            description = """
-                    Return the update book if the update went well
-                    \nNecessary role: ADMIN
-                    """)
-    public CategoryDto updateCategory(@Valid UpdateCategoryDto requestDto,
-                                      @PathVariable Long id) {
+    public CategoryDto updateCategory(
+            @Parameter(description = "Updated category data", required = true)
+            @Valid UpdateCategoryDto requestDto,
+            @Parameter(description = "Category ID", required = true, example = "1")
+            @PathVariable Long id) {
         return categoryService.update(requestDto, id);
     }
 
+    @Operation(
+            summary = "Delete a category",
+            description = """
+                    Deletes a category by its ID.
+                    \nNecessary role: **ADMIN**
+                    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "204",
+                    description = "Category successfully deleted"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete category",
-            description = """
-                    Return 204 status if delete went well
-                    \nNecessary role: ADMIN
-                    """)
-    public void deleteCategory(@PathVariable Long id) {
+    public void deleteCategory(
+            @Parameter(description = "Category ID", required = true, example = "1")
+            @PathVariable Long id) {
         categoryService.delete(id);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get category by id",
+    @Operation(
+            summary = "Get category by ID",
             description = """
-                    Returns the category by the specified parameter
-                    \nNecessary role: USER
+                    Retrieves a category by its unique ID.
+                    \nNecessary role: **USER**
                     """)
-    public CategoryDto getCategoryById(@PathVariable Long id) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CategoryDto.class))),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
+    @GetMapping("/{id}")
+    public CategoryDto getCategoryById(
+            @Parameter(description = "Category ID", required = true, example = "1")
+            @PathVariable Long id) {
         return categoryService.getById(id);
     }
 
-    @GetMapping()
-    //    @PreAuthorize("hasAuthority('USER')")
-    @Operation(summary = "Get all categories (with pagination and sorting)",
+    @Operation(
+            summary = "Get all categories",
             description = """
-                    Returns list
-                    of all available categories
-                    by pages and give ability
-                    to sort categories according to the specified parameters
-                    \nNecessary role: USER
+                    Retrieves a paginated list of
+                    all categories with optional sorting.
+                    \nNecessary role: **USER**
                     """)
-    public Page<CategoryDto> getAll(@PageableDefault(size = 5) Pageable pageable) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200",
+                    description = "List of categories retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping
+    public Page<CategoryDto> getAll(
+            @Parameter(description = "Pagination and sorting parameters")
+            @PageableDefault(size = 5) Pageable pageable) {
         return categoryService.getAll(pageable);
     }
 
+    @Operation(
+            summary = "Get category by title",
+            description = "Retrieves a category based on the given title.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Category found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CategoryDto.class))),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
     @GetMapping("/title")
-    public CategoryDto getByTitle(@RequestParam String title) {
+    public CategoryDto getByTitle(
+            @Parameter(description = "Category title", required = true, example = "Furniture")
+            @RequestParam String title) {
         return categoryService.getByTitle(title);
     }
 
+    @Operation(
+            summary = "Get categories by type",
+            description = """
+                    Retrieves categories filtered by their
+                    type with pagination support.
+                    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200",
+                    description = "Categories retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class)))
+    })
     @GetMapping("/type")
-    public Page<CategoryDto> getAllByStatus(@RequestParam Category.CategoryType type,
-                                            Pageable pageable) {
+    public Page<CategoryDto> getAllByStatus(
+            @Parameter(description = "Category type",
+                    required = true, example = "DESIGN")
+            @RequestParam Category.CategoryType type,
+            @Parameter(description = "Pagination parameters")
+            Pageable pageable) {
         return categoryService.getAllByType(pageable, type);
     }
 }

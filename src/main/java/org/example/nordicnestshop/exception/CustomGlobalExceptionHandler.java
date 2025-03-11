@@ -19,119 +19,84 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 @Hidden
 public class CustomGlobalExceptionHandler {
+
+    private ResponseEntity<Map<String, String>> buildResponse(
+            String message,
+            HttpStatus status
+    ) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", message);
+        return new ResponseEntity<>(errors, status);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException e) {
+            MethodArgumentNotValidException e
+    ) {
         Map<String, String> errors = new HashMap<>();
-
         e.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = error instanceof FieldError
-                    ? ((FieldError) error).getField() : null;
-            String errorMessage = error.getDefaultMessage();
-
-            errors.put(Objects.requireNonNullElse(fieldName, "globalError"), errorMessage);
+            String fieldName =
+                    error instanceof FieldError ? ((FieldError) error)
+                            .getField() : "globalError";
+            String errorMessage = Objects.requireNonNullElse(
+                    error.getDefaultMessage(),
+                    "Invalid value");
+            errors.put(fieldName, errorMessage);
         });
-
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(
-            HttpMessageNotReadableException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            IncorrectArgumentException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<Map<String, String>> handleBadRequestExceptions(
+            Exception e) {
+        return buildResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RegistrationException.class)
     public ResponseEntity<Map<String, String>> handleRegistrationException(
             RegistrationException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return buildResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DuplicateException.class)
     public ResponseEntity<Map<String, String>> handleDuplicateException(
             DuplicateException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.CONFLICT);
+        return buildResponse(e.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(ElementNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleElementNotFoundException(
             ElementNotFoundException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(IncorrectArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIncorrectArgumentException(
-            IncorrectArgumentException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(AuthenticationServiceException.class)
     public ResponseEntity<Map<String, String>> handleAuthenticationServiceException(
             AuthenticationServiceException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+        return buildResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAuthorizationDeniedException(
             AuthorizationDeniedException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+        return buildResponse(e.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentialsException(
             BadCredentialsException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, String>> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return buildResponse("Invalid username or password",
+                HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException e) {
-        Map<String, String> errors = new HashMap<>();
-
-        errors.put("error", e.getMessage());
-
-        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildResponse("An unexpected error occurred",
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

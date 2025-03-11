@@ -151,7 +151,7 @@ class CategoryControllerTest {
 
     @Test
     @WithMockUser(username = "admin", authorities = {"USER"})
-    void createCategory_whenUnauthorized_thenReturnUnauthorized() throws Exception {
+    void createCategory_whenUnauthorized_thenReturnForbidden() throws Exception {
         // Test without the @WithMockUser annotation
         MockMultipartFile imageFile = new MockMultipartFile(
                 "image",
@@ -167,7 +167,7 @@ class CategoryControllerTest {
                         .param("type", Category.CategoryType.DESIGN.toString())
                         .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @WithMockUser(username = "admin", authorities = {"ADMIN"})

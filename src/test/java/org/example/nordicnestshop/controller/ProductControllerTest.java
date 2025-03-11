@@ -180,7 +180,7 @@ class ProductControllerTest {
 
     @Test
     @WithMockUser(username = "user", authorities = {"USER"})
-    void createProduct_whenUnauthorized_thenReturnUnauthorized() throws Exception {
+    void createProduct_whenUnauthorized_thenReturnForbidden() throws Exception {
         // Act & Assert - User without ADMIN role should get 403 Forbidden
         mockMvc.perform(multipart("/products")
                         .param("title", "Test Product")
@@ -189,7 +189,7 @@ class ProductControllerTest {
                         .param("price", "99.99")
                         .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test

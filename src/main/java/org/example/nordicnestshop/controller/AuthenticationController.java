@@ -8,7 +8,6 @@ import org.example.nordicnestshop.dto.user.UserLoginRequestDto;
 import org.example.nordicnestshop.dto.user.UserLoginResponseDto;
 import org.example.nordicnestshop.dto.user.UserRegistrationRequestDto;
 import org.example.nordicnestshop.dto.user.UserRegistrationResponseDto;
-import org.example.nordicnestshop.exception.RegistrationException;
 import org.example.nordicnestshop.security.UserAuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,8 +35,7 @@ public class AuthenticationController {
     @PostMapping("/registration")
     @ResponseStatus(HttpStatus.CREATED)
     public UserRegistrationResponseDto register(
-            @RequestBody @Valid UserRegistrationRequestDto request)
-            throws RegistrationException {
+            @RequestBody @Valid UserRegistrationRequestDto request) {
         return userAuthenticationService.register(request);
     }
 

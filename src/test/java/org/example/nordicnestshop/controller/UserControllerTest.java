@@ -100,7 +100,7 @@ class UserControllerTest {
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = "classpath:users/delete-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void updateUserRole_Unauthorized() throws Exception {
+    void updateUserRole_Forbidden() throws Exception {
         UpdateUserRoleDto requestDto = new UpdateUserRoleDto();
         requestDto.setRoles(Set.of(UserRole.ADMIN,UserRole.USER));
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
@@ -109,7 +109,7 @@ class UserControllerTest {
         mockMvc.perform(put("/users/2/role")
                         .content(jsonRequest)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
