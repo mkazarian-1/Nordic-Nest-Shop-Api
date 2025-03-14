@@ -1,0 +1,1 @@
+TRUNCATE TABLE categories, products, product_images,product_category, attributes CASCADE;

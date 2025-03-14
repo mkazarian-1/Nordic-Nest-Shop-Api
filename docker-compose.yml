@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  db:
+    platform: linux/x86_64
+    image: postgres:16
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      POSTGRES_PASSWORD: $DB_DATASOURCE_PASSWORD
+      POSTGRES_USER: $DB_DATASOURCE_USERNAME
+      POSTGRES_DB: $DB_DATASOURCE_NAME
+    ports:
+      - $DB_DATASOURCE_LOCAL_PORT:$DB_DATASOURCE_DOCKER_PORT
+
+  app:
+    depends_on:
+      - db
+    restart: on-failure
+    image: nordic-nest-shop-api:latest
+    build: .
+    env_file: ./.env
+    ports:
+      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+      - $DEBUG_PORT:$DEBUG_PORT
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url"  : "jdbc:postgresql://db:$DB_DATASOURCE_DOCKER_PORT/$DB_DATASOURCE_NAME",
+        "spring.datasource.username" : "$DB_DATASOURCE_USERNAME",
+        "spring.datasource.password" : "$DB_DATASOURCE_PASSWORD"
+      }'
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT"
