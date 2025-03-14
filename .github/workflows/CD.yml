@@ -1,8 +1,12 @@
 name: Deploy to EC2
 
 on:
-  push:
-    branches: [ "master" ]
+  workflow_run:
+    workflows: ["Java CI with Maven"]
+    types:
+      - completed
+    branches:
+      - master
 
 env:
   AWS_REGION: eu-north-1
@@ -15,10 +19,17 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
+    needs: [build]
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Download JAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: application-jar
+          path: target
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -30,7 +41,10 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/v2q6v1m6
+          
+          # Build Docker image using the downloaded JAR file
           docker build -t ${{ env.ECR_REPOSITORY }} .
+          
           docker tag ${{ env.ECR_REPOSITORY }}:latest public.ecr.aws/v2q6v1m6/${{ env.ECR_REPOSITORY }}:latest
           docker push public.ecr.aws/v2q6v1m6/${{ env.ECR_REPOSITORY }}:latest
 
@@ -60,6 +74,6 @@ jobs:
             echo "AWS_S3_SECRETE_ACCESS_KEY=${{ secrets.AWS_S3_SECRETE_ACCESS_KEY }}" >> env.list
             echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}" >> env.list
             echo "AWS_S3_REGION=${{ secrets.AWS_S3_REGION }}" >> env.list
-  
+            
             # Run the new container
             sudo docker run -d -p 8080:8080 --name ${{ env.ECR_REPOSITORY }} --env-file env.list public.ecr.aws/v2q6v1m6/${{ env.ECR_REPOSITORY }}:latest
