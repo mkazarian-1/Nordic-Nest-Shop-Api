@@ -145,13 +145,13 @@ public class ProductController {
                             
                             **Pagination & Sorting:**
                             
-                            - Supports pageable parameters (`page`, `size`)
+                            - Supports pageable parameters (`page_number`, `page_size`)
                             
                             **Example Usage:**
                             
                             `/products/search?categoryIds=1,2,3
                             &searchText=modern chair&minPrice=50&maxPrice=500
-                            &color=red,size&large&page_number=0&page_number=10
+                            &color=red,size&large&page_number=0&page_size=10
                             """
     )
     @ApiResponses({
