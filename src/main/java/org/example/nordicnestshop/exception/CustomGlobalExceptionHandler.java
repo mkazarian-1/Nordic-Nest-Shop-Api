@@ -97,7 +97,7 @@ public class CustomGlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException e) {
-        return buildResponse("An unexpected error occurred",
+        return buildResponse("An unexpected error occurred:" + e.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
