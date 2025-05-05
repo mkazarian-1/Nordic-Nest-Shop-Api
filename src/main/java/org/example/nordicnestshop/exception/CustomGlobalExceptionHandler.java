@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -96,7 +97,13 @@ public class CustomGlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException e) {
-        return buildResponse("An unexpected error occurred",
+        return buildResponse("An unexpected error occurred:" + e.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<Map<String, String>> handlePropertyReferenceException(
+            PropertyReferenceException e) {
+        return buildResponse(e.getMessage(), HttpStatus.FORBIDDEN);
     }
 }

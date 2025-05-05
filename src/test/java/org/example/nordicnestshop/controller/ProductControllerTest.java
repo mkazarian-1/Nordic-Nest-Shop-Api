@@ -473,6 +473,43 @@ class ProductControllerTest {
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = "classpath:product/delete-product-and-categories.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void getAllByCategoryIdsWithSameTypeAndAttributes_categoriesFilter_Success() throws Exception {
+        MvcResult mvcResult = mockMvc
+                .perform(
+                        get("/products/search")
+                                .param("page_number", "0")
+                                .param("page_size", "10")
+                                .param("categoryIds", "4,2")
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode rootNode = objectMapper.readTree(mvcResult.getResponse().getContentAsString());
+
+        CustomPageImpl<ProductDto> productsPage = objectMapper.treeToValue(
+                rootNode.get("products"), new TypeReference<>() {
+                }
+        );
+
+        Map<String, List<String>> availableAttributes = objectMapper.treeToValue(
+                rootNode.get("availableAttributes"), new TypeReference<>() {
+                }
+        );
+
+        BigDecimal minPrice = new BigDecimal(rootNode.get("minPrice").asText());
+        BigDecimal maxPrice = new BigDecimal(rootNode.get("maxPrice").asText());
+
+        ProductSearchResponseDto responseDto =
+                new ProductSearchResponseDto(productsPage, availableAttributes, minPrice, maxPrice);
+
+        Assertions.assertEquals(2, responseDto.getProducts().getContent().size());
+    }
+
+    @Test
+    @Sql(scripts = "classpath:product/add-product-and-category.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:product/delete-product-and-categories.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getAllByCategoryIdsAndAttributes_defaultFilter_Success() throws Exception {
         MvcResult mvcResult = mockMvc
                 .perform(

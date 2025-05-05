@@ -24,6 +24,7 @@ import org.example.nordicnestshop.repository.CategoryRepository;
 import org.example.nordicnestshop.repository.ProductImageRepository;
 import org.example.nordicnestshop.repository.ProductRepository;
 import org.example.nordicnestshop.repository.specification.SpecificationProvider;
+import org.example.nordicnestshop.repository.specification.impl.AttributesSpecificationProvider;
 import org.example.nordicnestshop.service.AttributeService;
 import org.example.nordicnestshop.service.ProductService;
 import org.example.nordicnestshop.service.amazon.s3.S3Service;
@@ -42,9 +43,9 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository productImageRepository;
     private final AttributeRepository attributeRepository;
     private final ProductMapper productMapper;
-    private final SpecificationProvider specificationProvider;
     private final AttributeService attributeService;
     private final S3Service s3Service;
+    private final List<SpecificationProvider> specificationProviders;
 
     @Transactional
     @Override
@@ -184,42 +185,25 @@ public class ProductServiceImpl implements ProductService {
     private Specification<Product> getSpecification(Map<String, String> attributes) {
         attributes.remove("page_size");
         attributes.remove("page_number");
-
         Specification<Product> specification = Specification.where(null);
         try {
-            if (attributes.get("categoryIds") != null) {
-                List<Long> categoryIds = Arrays.stream(attributes.remove("categoryIds")
-                                .split(","))
-                        .map(Long::parseLong)
-                        .toList();
-                specification = specification.and(specificationProvider
-                        .hasCategoryIds(categoryIds));
+            for (SpecificationProvider specificationProvider : specificationProviders) {
+                if (specificationProvider.getName().equals("attributes")) {
+                    continue;
+                }
+                if (attributes.get(specificationProvider.getName()) != null) {
+                    specificationProvider.parseValues(attributes.remove(specificationProvider
+                            .getName()));
+                    specification = specification.and(specificationProvider.getSpecification());
+                }
             }
 
-            if (attributes.get("searchText") != null) {
-                String searchText = attributes.remove("searchText");
-                specification = specification
-                        .and(specificationProvider.semanticSearch(searchText));
-            }
-
-            if (attributes.get("minPrice") != null) {
-                BigDecimal minPrice = BigDecimal
-                        .valueOf(Long.parseLong(attributes.remove("minPrice")));
-                specification = specification.and(specificationProvider.minPrice(minPrice));
-            }
-            if (attributes.get("maxPrice") != null) {
-                BigDecimal minPrice = BigDecimal
-                        .valueOf(Long.parseLong(attributes.remove("maxPrice")));
-                specification = specification.and(specificationProvider.maxPrice(minPrice));
-            }
+            AttributesSpecificationProvider attributesSpecificationProvider =
+                    new AttributesSpecificationProvider();
+            attributesSpecificationProvider.setAttributes(convertAttributesRequest(attributes));
+            specification = specification.and(attributesSpecificationProvider.getSpecification());
         } catch (NumberFormatException e) {
             throw new IncorrectArgumentException("Incorrect input format. " + e.getMessage(), e);
-        }
-
-        Map<String, List<String>> convertedAttributes = convertAttributesRequest(attributes);
-        if (convertedAttributes != null && !convertedAttributes.isEmpty()) {
-            specification = specification.and(specificationProvider
-                    .hasAttributes(convertedAttributes));
         }
         return specification;
     }

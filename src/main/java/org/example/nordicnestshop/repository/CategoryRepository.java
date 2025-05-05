@@ -22,4 +22,6 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
     @Query(value = "DELETE FROM product_category WHERE category_id = :categoryId; "
             + "DELETE FROM categories WHERE id = :categoryId", nativeQuery = true)
     void deleteCategoryAndAssociations(@Param("categoryId") Long categoryId);
+
+    List<Category> getCategoriesByIdIn(List<Long> id);
 }

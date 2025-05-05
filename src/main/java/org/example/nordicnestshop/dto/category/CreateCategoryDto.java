@@ -14,7 +14,7 @@ public class CreateCategoryDto {
     @NotBlank
     private String title;
 
-    @Size(max = 255)
+    @Size(max = 1000)
     @NotBlank
     private String description;
 
