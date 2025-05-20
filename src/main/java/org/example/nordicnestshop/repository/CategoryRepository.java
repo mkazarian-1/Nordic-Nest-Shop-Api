@@ -24,4 +24,7 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
     void deleteCategoryAndAssociations(@Param("categoryId") Long categoryId);
 
     List<Category> getCategoriesByIdIn(List<Long> id);
+
+    @Query("SELECT c.id FROM Category c WHERE c.title IN :titles")
+    List<Long> getCategoriesIdByTitleIn(@Param("titles") List<String> titles);
 }
